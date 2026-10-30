@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Syntax check
+        run: node --check deployer-forensics.js
+      - name: CLI smoke test (usage)
+        run: node deployer-forensics.js --help --no-color | grep -q "usage:"
+      - name: CLI smoke test (rejects invalid address)
+        run: node deployer-forensics.js not-an-address --no-color 2>&1 | grep -q "not a valid base58 Solana address"
